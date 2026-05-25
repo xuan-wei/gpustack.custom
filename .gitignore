@@ -1,0 +1,11 @@
+# Data and cache directories (machine-specific, not in version control)
+gpustack-data/
+gpustack-cache/
+
+# Environment files with secrets
+docker-compose.custom/.env
+docker-compose.custom/.env.server-dev
+docker-compose.custom/.env.worker-dev
+
+# macOS
+.DS_Store

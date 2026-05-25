@@ -1,0 +1,43 @@
+# Custom GPUStack server+worker (dev) — runs alongside the existing production
+# deployment on the same host by offsetting all ports.
+#
+# Run from the workspace root:
+#   docker compose -f docker-compose.custom/docker-compose.server-dev.yaml \
+#                  --env-file docker-compose.custom/.env up -d
+#
+# Build only:
+#   docker compose -f docker-compose.custom/docker-compose.server-dev.yaml \
+#                  --env-file docker-compose.custom/.env build
+
+services:
+  gpustack-server-dev:
+    build:
+      context: ..
+      dockerfile: docker-compose.custom/Dockerfile.custom
+      args:
+        OFFICIAL_TAG: ${OFFICIAL_TAG:-v2.1.2}
+    image: gpustack-custom:${OFFICIAL_TAG:-v2.1.2}
+    container_name: gpustack-server-dev
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    runtime: nvidia
+    volumes:
+      - ${GPUSTACK_DATA_DIR_HOST:-../gpustack-data}:/var/lib/gpustack
+      - ${GPUSTACK_CACHE_DIR_HOST:-../gpustack-cache}:/var/cache/gpustack
+      - ${MODEL_SCOPE_PATH_HOST:-../gpustack-cache/modelscope}:/modelscope-cache
+      - ${MODEL_CATALOG_HOST:-../gpustack/gpustack/assets/model-catalog-modelscope.yaml}:/gpustack-assets/model-catalog-modelscope.yaml:ro
+    environment:
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+    command:
+      - --data-dir=/var/lib/gpustack
+      - --cache-dir=/var/cache/gpustack
+      - --port=${GPUSTACK_API_PORT:-28080}
+      - --worker-port=${GPUSTACK_WORKER_PORT:-20150}
+      - --metrics-port=${GPUSTACK_METRICS_PORT:-20151}
+      - --service-port-range=${GPUSTACK_SERVICE_PORT_RANGE:-50000-50063}
+      - --rpc-server-port-range=${GPUSTACK_RPC_PORT_RANGE:-50064-50095}
+      - --gateway-mode=${GPUSTACK_GATEWAY_MODE:-auto}
+      - --bootstrap-password=${GPUSTACK_BOOTSTRAP_PASSWORD}
+      - --model-catalog-file=/gpustack-assets/model-catalog-modelscope.yaml
+      - --model-scope-path=/modelscope-cache

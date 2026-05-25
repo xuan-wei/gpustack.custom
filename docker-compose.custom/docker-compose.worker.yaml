@@ -1,0 +1,41 @@
+# Custom GPUStack worker — local build, never pushed to a registry.
+#
+# Run from the workspace root:
+#   docker compose -f docker-compose.custom/docker-compose.worker.yaml \
+#                  --env-file docker-compose.custom/.env up -d
+#
+# Build only:
+#   docker compose -f docker-compose.custom/docker-compose.worker.yaml \
+#                  --env-file docker-compose.custom/.env build
+
+services:
+  gpustack-worker:
+    build:
+      context: ..
+      dockerfile: docker-compose.custom/Dockerfile.custom
+      args:
+        OFFICIAL_TAG: ${OFFICIAL_TAG:-v2.1.2}
+    image: gpustack-custom:${OFFICIAL_TAG:-v2.1.2}
+    container_name: gpustack-worker
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    runtime: nvidia
+    volumes:
+      - ${GPUSTACK_DATA_DIR_HOST:-../gpustack-data}:/var/lib/gpustack
+      - ${GPUSTACK_CACHE_DIR_HOST:-../gpustack-cache}:/var/cache/gpustack
+      - ${MODEL_SCOPE_PATH_HOST:-../gpustack-cache/modelscope}:/modelscope-cache
+      - ${MODEL_CATALOG_HOST:-../gpustack/gpustack/assets/model-catalog-modelscope.yaml}:/gpustack-assets/model-catalog-modelscope.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+    command:
+      - --data-dir=/var/lib/gpustack
+      - --cache-dir=/var/cache/gpustack
+      - --gateway-mode=${GPUSTACK_GATEWAY_MODE:-auto}
+      - --model-catalog-file=/gpustack-assets/model-catalog-modelscope.yaml
+      - --model-scope-path=/modelscope-cache
+      - --token=${GPUSTACK_TOKEN}
+      - --server-url=${GPUSTACK_SERVER_URL}
+      - --worker-ip=${GPUSTACK_WORKER_IP}
+      - --advertise-address=${GPUSTACK_ADVERTISE_ADDRESS}

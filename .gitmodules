@@ -1,0 +1,8 @@
+[submodule "gpustack"]
+	path = gpustack
+	url = git@github.com:xuan-wei/gpustack.git
+	branch = port/custom-features-v212
+[submodule "gpustack-ui"]
+	path = gpustack-ui
+	url = git@github.com:xuan-wei/gpustack-ui.git
+	branch = main

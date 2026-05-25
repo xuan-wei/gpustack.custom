@@ -1,0 +1,29 @@
+# Prometheus config for custom deployment.
+#
+# gpustack-server runs with network_mode: host, so prometheus (bridge network)
+# must reach it via host.docker.internal rather than the container name.
+# The extra_hosts: [host.docker.internal:host-gateway] in the compose file
+# makes this alias available inside the prometheus container.
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - localhost:9090
+
+  - job_name: gpustack-worker-discovery
+    scrape_interval: 5s
+    http_sd_configs:
+      - url: 'http://host.docker.internal:10161/metrics/targets'
+        refresh_interval: 1m
+
+  - job_name: gpustack-server
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - 'host.docker.internal:10161'

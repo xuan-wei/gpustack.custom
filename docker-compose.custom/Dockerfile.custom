@@ -1,0 +1,31 @@
+# Custom GPUStack image — layers on top of the official release.
+#
+# Build context must be the workspace root (parent of both repos):
+#   docker compose -f docker-compose.custom/docker-compose.server.yaml up -d
+#
+# To follow a new official release, update OFFICIAL_TAG and rebuild.
+
+ARG OFFICIAL_TAG=v2.1.2
+FROM gpustack/gpustack:${OFFICIAL_TAG}
+
+# ── 1. Locate the installed gpustack Python package ──────────────────────────
+#    Stored in an env var so later RUN steps can reuse it.
+RUN GPUSTACK_PKG=$(python3 -c "import gpustack, os; print(os.path.dirname(gpustack.__file__))") \
+ && echo "$GPUSTACK_PKG" > /tmp/gpustack_pkg_path.txt
+
+# ── 2. Overlay custom backend source ─────────────────────────────────────────
+#    Copies every file from our repo's gpustack/ package directory on top of
+#    the installed package, preserving the ui/ sub-directory from the image.
+COPY gpustack/gpustack/ /tmp/custom-src/
+RUN GPUSTACK_PKG=$(cat /tmp/gpustack_pkg_path.txt) \
+ && find /tmp/custom-src -mindepth 1 -maxdepth 1 ! -name 'ui' \
+      -exec cp -r {} "$GPUSTACK_PKG/" \; \
+ && rm -rf /tmp/custom-src /tmp/gpustack_pkg_path.txt
+
+# ── 3. Replace UI with custom build ──────────────────────────────────────────
+#    Requires gpustack-ui/dist/ to exist (run `npm run build` in gpustack-ui).
+COPY gpustack-ui/dist/ /tmp/custom-ui/
+RUN GPUSTACK_PKG=$(python3 -c "import gpustack, os; print(os.path.dirname(gpustack.__file__))") \
+ && rm -rf "$GPUSTACK_PKG/ui" \
+ && cp -r /tmp/custom-ui "$GPUSTACK_PKG/ui" \
+ && rm -rf /tmp/custom-ui
