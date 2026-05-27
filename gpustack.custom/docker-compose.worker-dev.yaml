@@ -2,18 +2,18 @@
 # Runs alongside the existing production worker by offsetting all ports.
 #
 # Run from the workspace root:
-#   docker compose -f docker-compose.custom/docker-compose.worker-dev.yaml \
-#                  --env-file docker-compose.custom/.env.worker-dev up -d
+#   docker compose -f gpustack.custom/docker-compose.worker-dev.yaml \
+#                  --env-file gpustack.custom/.env.worker-dev up -d
 #
 # Build only:
-#   docker compose -f docker-compose.custom/docker-compose.worker-dev.yaml \
-#                  --env-file docker-compose.custom/.env.worker-dev build
+#   docker compose -f gpustack.custom/docker-compose.worker-dev.yaml \
+#                  --env-file gpustack.custom/.env.worker-dev build
 
 services:
   gpustack-worker-dev:
     build:
       context: ..
-      dockerfile: docker-compose.custom/Dockerfile.custom
+      dockerfile: gpustack.custom/Dockerfile.custom
       args:
         OFFICIAL_TAG: ${OFFICIAL_TAG:-v2.1.2}
     image: gpustack-custom:${OFFICIAL_TAG:-v2.1.2}
@@ -26,20 +26,18 @@ services:
       - ${GPUSTACK_DATA_DIR_HOST:-../gpustack-data}:/var/lib/gpustack
       - ${GPUSTACK_CACHE_DIR_HOST:-../gpustack-cache}:/var/cache/gpustack
       - ${MODEL_SCOPE_PATH_HOST:-../gpustack-cache/modelscope}:/modelscope-cache
-      - ${MODEL_CATALOG_HOST:-../gpustack/gpustack/assets/model-catalog-modelscope.yaml}:/gpustack-assets/model-catalog-modelscope.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+      CUDA_DEVICE_ORDER: PCI_BUS_ID
     command:
       - --data-dir=/var/lib/gpustack
       - --cache-dir=/var/cache/gpustack
       - --worker-port=${GPUSTACK_WORKER_PORT:-20150}
-      - --metrics-port=${GPUSTACK_METRICS_PORT:-20151}
+      - --metrics-port=${GPUSTACK_METRICS_PORT:-20161}
+      - --worker-metrics-port=${GPUSTACK_WORKER_METRICS_PORT:-20151}
       - --service-port-range=${GPUSTACK_SERVICE_PORT_RANGE:-50000-50063}
-      - --rpc-server-port-range=${GPUSTACK_RPC_PORT_RANGE:-50064-50095}
       - --gateway-mode=${GPUSTACK_GATEWAY_MODE:-auto}
-      - --model-catalog-file=/gpustack-assets/model-catalog-modelscope.yaml
-      - --model-scope-path=/modelscope-cache
       - --token=${GPUSTACK_TOKEN}
       - --server-url=${GPUSTACK_SERVER_URL}
       - --worker-ip=${GPUSTACK_WORKER_IP}

@@ -1,7 +1,7 @@
 # Custom GPUStack image — layers on top of the official release.
 #
 # Build context must be the workspace root (parent of both repos):
-#   docker compose -f docker-compose.custom/docker-compose.server.yaml up -d
+#   docker compose -f gpustack.custom/docker-compose.server.yaml up -d
 #
 # To follow a new official release, update OFFICIAL_TAG and rebuild.
 
@@ -18,7 +18,7 @@ RUN GPUSTACK_PKG=$(python3 -c "import gpustack, os; print(os.path.dirname(gpusta
 #    the installed package, preserving the ui/ sub-directory from the image.
 COPY gpustack/gpustack/ /tmp/custom-src/
 RUN GPUSTACK_PKG=$(cat /tmp/gpustack_pkg_path.txt) \
- && find /tmp/custom-src -mindepth 1 -maxdepth 1 ! -name 'ui' \
+ && find /tmp/custom-src -mindepth 1 -maxdepth 1 ! -name 'ui' ! -name 'third_party' \
       -exec cp -r {} "$GPUSTACK_PKG/" \; \
  && rm -rf /tmp/custom-src /tmp/gpustack_pkg_path.txt
 
@@ -29,3 +29,14 @@ RUN GPUSTACK_PKG=$(python3 -c "import gpustack, os; print(os.path.dirname(gpusta
  && rm -rf "$GPUSTACK_PKG/ui" \
  && cp -r /tmp/custom-ui "$GPUSTACK_PKG/ui" \
  && rm -rf /tmp/custom-ui
+
+# ── 4. Custom entrypoint — modelscope cache symlink ─────────────────────────
+#    Creates model_scope → /modelscope-cache before GPUStack starts, so child
+#    containers (vLLM, llama-box) can resolve the path via mirrored mounts.
+COPY gpustack.custom/entrypoint-custom.sh /usr/bin/entrypoint-custom.sh
+ENTRYPOINT ["/usr/bin/entrypoint-custom.sh"]
+
+# ── 5. Override stock Grafana dashboards ────────────────────────────────────
+#    Adds our "Gateway-side Metrics" row so llama.cpp models also have
+#    request/token/latency panels via the Higress gateway scrape.
+COPY gpustack.custom/grafana/grafana_dashboards/gpustack-model.json /etc/dashboards/gpustack-model.json

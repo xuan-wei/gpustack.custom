@@ -3,9 +3,9 @@ gpustack-data/
 gpustack-cache/
 
 # Environment files with secrets
-docker-compose.custom/.env
-docker-compose.custom/.env.server-dev
-docker-compose.custom/.env.worker-dev
+gpustack.custom/.env
+gpustack.custom/.env.server-dev
+gpustack.custom/.env.worker-dev
 
 # macOS
 .DS_Store

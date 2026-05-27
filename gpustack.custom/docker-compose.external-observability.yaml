@@ -2,8 +2,8 @@
 #
 # Use together with docker-compose.server.yaml:
 #   docker compose \
-#     -f docker-compose.custom/docker-compose.server.yaml \
-#     -f docker-compose.custom/docker-compose.external-observability.yaml \
+#     -f gpustack.custom/docker-compose.server.yaml \
+#     -f gpustack.custom/docker-compose.external-observability.yaml \
 #     --env-file deploy/.env up -d
 #
 # Note: gpustack-server uses network_mode: host, so prometheus reaches it
