@@ -1,0 +1,59 @@
+# Custom GPUStack worker — runs on a remote worker host and registers with
+# a remote GPUStack server via --server-url + --token.
+# For the server-side stack, use docker-compose-server.yaml.
+#
+# Run from the workspace root with one of the env templates:
+#
+#   Production:
+#     docker compose -f gpustack.custom/docker-compose-worker.yaml \
+#                    --env-file gpustack.custom/.env-worker-prod up -d
+#
+#   Development (ports offset +10000 so it can coexist with a prod worker):
+#     docker compose -f gpustack.custom/docker-compose-worker.yaml \
+#                    --env-file gpustack.custom/.env-worker-dev up -d
+#
+# Build only:
+#   docker compose -f gpustack.custom/docker-compose-worker.yaml \
+#                  --env-file gpustack.custom/.env-worker-{prod,dev} build
+#
+# The ${VAR:-DEFAULT} fallbacks below use GPUStack's official defaults
+# (see `gpustack start --help`). .env-worker-prod sticks to those;
+# .env-worker-dev offsets every port +10000.
+
+services:
+  gpustack-worker:
+    build:
+      context: ..
+      dockerfile: gpustack.custom/Dockerfile.custom
+      args:
+        OFFICIAL_TAG: ${OFFICIAL_TAG:-v2.1.2}
+    image: gpustack-custom:${OFFICIAL_TAG:-v2.1.2}
+    container_name: ${GPUSTACK_CONTAINER_NAME:-gpustack-worker}
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    runtime: nvidia
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${GPUSTACK_DATA_DIR_HOST:-../gpustack-data}:/var/lib/gpustack
+      - ${GPUSTACK_CACHE_DIR_HOST:-../gpustack-cache}:/var/cache/gpustack
+      # External cache reuse — entrypoint-custom.sh symlinks /var/cache/gpustack/{huggingface,model_scope}
+      # to these mount points when the corresponding subdir is absent from the parent gpustack-cache.
+      # Defaults fall back to gpustack-cache subdirs (= upstream behavior, no external reuse).
+      - ${HF_CACHE_DIR_HOST:-../gpustack-cache/huggingface}:/huggingface-cache
+      - ${MODEL_SCOPE_PATH_HOST:-../gpustack-cache/model_scope}:/modelscope-cache
+    environment:
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+      CUDA_DEVICE_ORDER: PCI_BUS_ID
+    command:
+      - --data-dir=/var/lib/gpustack
+      - --cache-dir=/var/cache/gpustack
+      - --server-url=${GPUSTACK_SERVER_URL}
+      - --token=${GPUSTACK_TOKEN}
+      - --worker-ip=${GPUSTACK_WORKER_IP}
+      - --advertise-address=${GPUSTACK_ADVERTISE_ADDRESS}
+      - --worker-port=${GPUSTACK_WORKER_PORT:-10150}
+      - --worker-metrics-port=${GPUSTACK_WORKER_METRICS_PORT:-10151}
+      - --metrics-port=${GPUSTACK_METRICS_PORT:-10161}
+      - --service-port-range=${GPUSTACK_SERVICE_PORT_RANGE:-40000-40063}
+      - --gateway-mode=${GPUSTACK_GATEWAY_MODE:-auto}

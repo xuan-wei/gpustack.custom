@@ -36,7 +36,10 @@ RUN GPUSTACK_PKG=$(python3 -c "import gpustack, os; print(os.path.dirname(gpusta
 COPY gpustack.custom/entrypoint-custom.sh /usr/bin/entrypoint-custom.sh
 ENTRYPOINT ["/usr/bin/entrypoint-custom.sh"]
 
-# ── 5. Override stock Grafana dashboards ────────────────────────────────────
-#    Adds our "Gateway-side Metrics" row so llama.cpp models also have
-#    request/token/latency panels via the Higress gateway scrape.
-COPY gpustack.custom/grafana/grafana_dashboards/gpustack-model.json /etc/dashboards/gpustack-model.json
+# ── 5. Overlay Grafana dashboards from custom fork ──────────────────────────
+#    Mirrors the upstream's own `COPY docker-compose/grafana/grafana_dashboards/
+#    /etc/dashboards/` (pack/Dockerfile in the gpustack repo), but sourced from
+#    our fork — which carries the "Gateway-side Metrics" row so llama.cpp
+#    models also get request/token/latency panels via the Higress scrape.
+#    Edit the JSON in the submodule; `git rebase` handles upstream changes.
+COPY gpustack/docker-compose/grafana/grafana_dashboards/ /etc/dashboards/

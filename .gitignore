@@ -3,9 +3,10 @@ gpustack-data/
 gpustack-cache/
 
 # Environment files with secrets
-gpustack.custom/.env
-gpustack.custom/.env.server-dev
-gpustack.custom/.env.worker-dev
+gpustack.custom/.env-server-prod
+gpustack.custom/.env-server-dev
+gpustack.custom/.env-worker-prod
+gpustack.custom/.env-worker-dev
 
 # macOS
 .DS_Store
