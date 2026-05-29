@@ -10,3 +10,6 @@ gpustack.custom/.env-worker-dev
 
 # macOS
 .DS_Store
+
+# Playwright MCP browser session artifacts (console logs, screenshots, snapshots)
+.playwright-mcp/
