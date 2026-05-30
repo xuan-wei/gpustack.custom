@@ -24,6 +24,7 @@ services:
     build:
       context: ..
       dockerfile: gpustack.custom/Dockerfile.custom
+      target: server
       args:
         OFFICIAL_TAG: ${OFFICIAL_TAG:-v2.1.2}
     image: gpustack-custom:${OFFICIAL_TAG:-v2.1.2}

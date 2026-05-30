@@ -34,18 +34,19 @@ npm run build        # 输出到 gpustack-ui/dist/
 
 ### Docker 镜像
 
+Dockerfile.custom 采用 multi-stage 构建：`base`（后端）→ `server`（加前端）/ `worker`（纯后端）。
+Worker 构建**不需要** `gpustack-ui/dist/`，可以跳过前端编译。
+
 镜像构建目录为仓库根目录，请在仓库根目录执行：
 
 ```bash
-# server（本机）
+# server（需要先编译前端）
 docker compose -f gpustack.custom/docker-compose-server.yaml \
                --env-file gpustack.custom/.env-server-dev build
-# worker（远程节点同样命令换 worker 文件）
+# worker（不需要前端 dist）
 docker compose -f gpustack.custom/docker-compose-worker.yaml \
                --env-file gpustack.custom/.env-worker-dev build
 ```
-
-Dockerfile.custom 会将自定义后端源码和前端打包 dist 叠加在官方 `gpustack/gpustack:v2.1.2` 镜像之上。
 
 ## 运行
 

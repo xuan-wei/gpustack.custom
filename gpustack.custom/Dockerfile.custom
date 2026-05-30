@@ -4,9 +4,12 @@
 #   docker compose -f gpustack.custom/docker-compose.server.yaml up -d
 #
 # To follow a new official release, update OFFICIAL_TAG and rebuild.
+#
+# Multi-stage: use `target: server` or `target: worker` in docker-compose.
+# Worker builds do NOT require gpustack-ui/dist/ (no frontend needed).
 
 ARG OFFICIAL_TAG=v2.1.2
-FROM gpustack/gpustack:${OFFICIAL_TAG}
+FROM gpustack/gpustack:${OFFICIAL_TAG} AS base
 
 # ── 1. Locate the installed gpustack Python package ──────────────────────────
 #    Stored in an env var so later RUN steps can reuse it.
@@ -22,24 +25,27 @@ RUN GPUSTACK_PKG=$(cat /tmp/gpustack_pkg_path.txt) \
       -exec cp -r {} "$GPUSTACK_PKG/" \; \
  && rm -rf /tmp/custom-src /tmp/gpustack_pkg_path.txt
 
-# ── 3. Replace UI with custom build ──────────────────────────────────────────
-#    Requires gpustack-ui/dist/ to exist (run `npm run build` in gpustack-ui).
-COPY gpustack-ui/dist/ /tmp/custom-ui/
-RUN GPUSTACK_PKG=$(python3 -c "import gpustack, os; print(os.path.dirname(gpustack.__file__))") \
- && rm -rf "$GPUSTACK_PKG/ui" \
- && cp -r /tmp/custom-ui "$GPUSTACK_PKG/ui" \
- && rm -rf /tmp/custom-ui
-
-# ── 4. Custom entrypoint — modelscope cache symlink ─────────────────────────
+# ── 3. Custom entrypoint — modelscope cache symlink ─────────────────────────
 #    Creates model_scope → /modelscope-cache before GPUStack starts, so child
 #    containers (vLLM, llama-box) can resolve the path via mirrored mounts.
 COPY gpustack.custom/entrypoint-custom.sh /usr/bin/entrypoint-custom.sh
 ENTRYPOINT ["/usr/bin/entrypoint-custom.sh"]
 
-# ── 5. Overlay Grafana dashboards from custom fork ──────────────────────────
-#    Mirrors the upstream's own `COPY docker-compose/grafana/grafana_dashboards/
-#    /etc/dashboards/` (pack/Dockerfile in the gpustack repo), but sourced from
-#    our fork — which carries the "Gateway-side Metrics" row so llama.cpp
-#    models also get request/token/latency panels via the Higress scrape.
-#    Edit the JSON in the submodule; `git rebase` handles upstream changes.
+# ── 4. Overlay Grafana dashboards from custom fork ──────────────────────────
 COPY gpustack/docker-compose/grafana/grafana_dashboards/ /etc/dashboards/
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Worker target — backend only, no frontend build required.
+# ═══════════════════════════════════════════════════════════════════════════════
+FROM base AS worker
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Server target — adds custom frontend UI on top of base.
+# Requires gpustack-ui/dist/ to exist (run `npm run build` in gpustack-ui).
+# ═══════════════════════════════════════════════════════════════════════════════
+FROM base AS server
+COPY gpustack-ui/dist/ /tmp/custom-ui/
+RUN GPUSTACK_PKG=$(python3 -c "import gpustack, os; print(os.path.dirname(gpustack.__file__))") \
+ && rm -rf "$GPUSTACK_PKG/ui" \
+ && cp -r /tmp/custom-ui "$GPUSTACK_PKG/ui" \
+ && rm -rf /tmp/custom-ui
