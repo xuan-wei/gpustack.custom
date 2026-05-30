@@ -1,3 +1,5 @@
+CLAUDE.local.md
+
 # Data and cache directories (machine-specific, not in version control)
 gpustack-data/
 gpustack-cache/
