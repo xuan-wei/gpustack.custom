@@ -22,6 +22,7 @@
 | **放置打分** | `policies/scorers/placement_scorer.py`(改) | 非 Apple GPU 优先（×0.95 惩罚） |
 | **网关指标 scrape** | `cmd/prerun.py`(改) + `gpustack.custom/` | Prometheus 追加 Higress 网关 job，给 llama.cpp 补请求/延迟指标 |
 | **GGUF 兼容修复** | `routes/benchmarks.py`, `worker/benchmark/runner.py`, `worker/backends/base.py`(改) | GGUF tokenizer 源推导、llama.cpp 拆 `--flag=value`（均为通用 bug，宜上游 PR）|
+| **冒号模型名** | `schemas/model_routes.py`(改), `routes/models.py`(改), 前端 regex/i18n | 允许输入冒号（如 `qwen2.5:14b`），自动替换为连字符存储 |
 
 > ⚠️ ModelScope 缓存改为由 `gpustack.custom/entrypoint-custom.sh` 做软链，**不再**改 `config/config.py`/`cmd/start.py`。
 
