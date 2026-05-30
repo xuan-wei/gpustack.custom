@@ -4,7 +4,7 @@
 
 ## 自定义功能（基于官方 v2.1.2）
 
-> 完整的逐功能 rebase 风险评估、更优实现建议、auto-scaling 实测结果见 **[custom-feature-report/v2.1.2.md](custom-feature-report/v2.1.2.md)**（2026-05-30 全量分析 + 双后端实测）。下表是速查。
+> 完整的逐功能 rebase 风险评估、更优实现建议、auto-scaling 实测结果见 **[feature-report/v2.1.2.md](gpustack.custom/feature-report/v2.1.2.md)**（2026-05-30 全量分析 + 双后端实测）。下表是速查。
 
 | 功能 | 关键文件 | 描述 |
 |------|---------|------|
@@ -90,7 +90,7 @@ docker compose -f gpustack.custom/docker-compose-server.yaml \
 
 ## Rebase 指引：重点盯这几个文件
 
-完整分析见 [custom-feature-report/v2.1.2.md](custom-feature-report/v2.1.2.md)。rebase 到新官方版本时，**自动 merge 不可信**，重点人工核对：
+完整分析见 [feature-report/v2.1.2.md](gpustack.custom/feature-report/v2.1.2.md)。rebase 到新官方版本时，**自动 merge 不可信**，重点人工核对：
 
 **🔴 高风险（改了官方热点文件的控制流/算术）**
 - `routes/openai.py` —— 冷启动 + 请求打点两簇，含整函数重写 `get_running_instance`
@@ -104,6 +104,6 @@ docker compose -f gpustack.custom/docker-compose-server.yaml \
 2. **三文件耦合修复**整体校验（手动跨节点 GPU）：`scheduler.py` 删除块没「复活」、`gguf_selector` 两个 `and distributed_inference_across_workers` 守卫还在、`models.py::validate_gpu_ids` 条件还在。
 3. **前端默认值**：`forms/index.tsx` 的 `distributed_inference_across_workers: false` 易被官方默认 `true` 覆盖回去。
 4. **`metrics_config.yaml`**：grep 官方是否新增自己的 `llama.cpp:` 映射块（撞 key）。
-5. 升级后跑一遍 [custom-feature-report/v2.1.2.md](custom-feature-report/v2.1.2.md) §2 的双后端 auto-scaling 闭环冒烟测试。
+5. 升级后跑一遍 [feature-report/v2.1.2.md](gpustack.custom/feature-report/v2.1.2.md) §2 的双后端 auto-scaling 闭环冒烟测试。
 
 > 降低未来 rebase 成本的重构建议（挪中间件、合并冷启动逻辑、抽前端生命周期列等）见报告 §5；可上游 PR 的通用 bug 修复见内存 `project_upstream_pr_backlog`。
