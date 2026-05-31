@@ -1,0 +1,31 @@
+Loaded 500 MATH-500 problems
+Config: 5 runs, temp=0.7, concurrency=8
+
+================================================================
+qwen2.5-14b-instruct-awq
+================================================================
+  run 1: direct 390/500=78.0%  reflexion 387/500=77.4%  (err d=0 r=0, 724s)
+  run 2: direct 380/500=76.0%  reflexion 384/500=76.8%  (err d=0 r=0, 720s)
+  run 3: direct 365/500=73.0%  reflexion 366/500=73.2%  (err d=0 r=0, 712s)
+  run 4: direct 380/500=76.0%  reflexion 383/500=76.6%  (err d=0 r=0, 713s)
+  run 5: direct 375/500=75.0%  reflexion 381/500=76.2%  (err d=0 r=0, 723s)
+================================================================
+qwen2.5-14b-instruct
+================================================================
+  run 1: direct 388/500=77.6%  reflexion 386/500=77.2%  (err d=0 r=0, 2175s)
+  run 2: direct 384/500=76.8%  reflexion 388/500=77.6%  (err d=0 r=0, 2270s)
+  run 3: direct 387/500=77.4%  reflexion 390/500=78.0%  (err d=0 r=0, 2213s)
+  run 4: direct 386/500=77.2%  reflexion 384/500=76.8%  (err d=0 r=0, 2241s)
+  run 5: direct 393/500=78.6%  reflexion 389/500=77.8%  (err d=0 r=0, 2214s)
+
+================================================================
+SUMMARY (mean over 5 runs)
+================================================================
+Model                       Mode            Mean     Min     Max
+----------------------------------------------------------------
+qwen2.5-14b-instruct-awq    direct         75.6%   73.0%   78.0%
+qwen2.5-14b-instruct-awq    reflexion      76.0%   73.2%   77.4%
+qwen2.5-14b-instruct        direct         77.5%   76.8%   78.6%
+qwen2.5-14b-instruct        reflexion      77.5%   76.8%   78.0%
+
+Saved to /home/xuan/Workspace/gpustack-dev/gpustack.custom/bench-math500
